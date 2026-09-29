@@ -29,10 +29,22 @@ function fillContent() {
   $('#year').textContent = new Date().getFullYear();
 
   const work = PROJECTS.filter((p) => !p.video);
-  $('#projects').innerHTML = work.filter((p) => p.featured).map((p) => `
-    <button class="project" type="button" data-id="${p.id}" aria-label="Open project: ${p.title}">
-      <div class="project-img"><img src="${p.cover}" alt="" loading="lazy" decoding="async"></div>
-      <div class="project-meta"><h3>${p.title}<span class="open" aria-hidden="true">↗</span></h3><p>${p.kind}</p></div>
+  // featured cards pair up left/right; portrait and square covers take 5 of 12 columns,
+  // wide ones 7, and each card keeps its render's own aspect ratio
+  const featured = work.filter((p) => p.featured);
+  const ratio = (p) => { const [a, b] = (p.ratio || '4 / 3').split('/').map(Number); return a / b; };
+  const want = (p) => (ratio(p) < 1.1 ? 5 : 7);
+  const place = [];
+  for (let i = 0; i < featured.length; i += 2) {
+    const a = featured[i], b = featured[i + 1];
+    if (!b) { const s = want(a); place.push(`grid-column:${Math.floor((12 - s) / 2) + 1} / span ${s}`); break; }
+    const l = want(a), r = Math.min(want(b), 12 - l), inset = (i / 2) % 2 && l + r <= 11 ? 1 : 0;
+    place.push(`grid-column:${1 + inset} / span ${l}`, `grid-column:${13 - r} / span ${r};margin-top:${ratio(b) < ratio(a) ? 8 : 16}vh`);
+  }
+  $('#projects').innerHTML = featured.map((p, i) => `
+    <button class="project" type="button" data-id="${p.id}" style="${place[i]}" aria-label="Open project ${p.no}: ${p.title}">
+      <div class="project-img" style="aspect-ratio:${p.ratio || '4 / 3'}"><img src="${p.cover}" alt="" loading="lazy" decoding="async"></div>
+      <div class="project-meta"><span class="project-no" aria-hidden="true">${p.no}</span><h3>${p.title}<span class="open" aria-hidden="true">↗</span></h3><p>${p.kind}</p></div>
     </button>`).join('');
   $('#indexList').innerHTML = work.filter((p) => !p.featured).map((p) => `
     <li><button class="index-row" type="button" data-id="${p.id}" aria-label="Open project: ${p.title}">
@@ -57,24 +69,27 @@ function openProject(p, opener) {
   p.images.forEach((src, i) => { const im = new Image(); im.src = src; im.alt = `${p.title}, image ${i + 1}`; im.decoding = 'async'; if (i > 1) im.loading = 'lazy'; m.appendChild(im); });
   $('#lbKind').textContent = p.kind; $('#lbTitle').textContent = p.title; $('#lbBlurb').textContent = p.blurb;
   const link = $('#lbLink'); link.hidden = !p.link; if (p.link) link.href = p.link;
+  const watch = $('#lbWatch'); watch.hidden = !p.watch; if (p.watch) watch.href = p.watch;
   lb.hidden = false; lb.scrollTop = 0;
+  document.documentElement.classList.add('lb-open');   // page behind stays put, with or without Lenis
   lenis?.stop();
   $('#reelVideo').pause();
-  $('#lbClose').focus();
+  $('#lbClose').focus({ preventScroll: true });
 }
 function closeLightbox() {
   const v = $('#lbMedia video'); if (v) v.pause();
   lb.hidden = true;
+  document.documentElement.classList.remove('lb-open');
   lenis?.start();
   if (reelVisible) $('#reelVideo').play().catch(() => {});
-  lastFocus?.focus?.();
+  lastFocus?.focus?.({ preventScroll: true });
 }
 $('#lbClose').addEventListener('click', closeLightbox);
 addEventListener('keydown', (e) => {
   if (lb.hidden) return;
   if (e.key === 'Escape') closeLightbox();
   if (e.key === 'Tab') { // keep focus inside the dialog
-    const stops = [$('#lbClose'), $('#lbLink')].filter((el) => !el.hidden);
+    const stops = [$('#lbClose'), $('#lbWatch'), $('#lbLink')].filter((el) => !el.hidden);
     const k = stops.indexOf(document.activeElement);
     e.preventDefault(); stops[(k + (e.shiftKey ? -1 : 1) + stops.length) % stops.length].focus();
   }
@@ -228,12 +243,12 @@ function setupScroll() {
   const nav = $('#nav');
   ScrollTrigger.create({ start: 200, end: 'max', onUpdate: (self) => nav.classList.toggle('hide', self.direction === 1 && self.scroll() > 400) });
 
-  // reel grows to fill the column as it reaches the centre, and only plays in view
+  // reel opens out to the full column as it reaches the centre (clip-path, so the
+  // layout below never moves), and only plays in view
   if (innerWidth > 820 && !reduced) {
-    gsap.fromTo('#reelFrame', { width: '62%', borderRadius: 18 }, {
-      width: '100%', borderRadius: 6, ease: 'none',
-      scrollTrigger: { trigger: '#reel', start: 'top 90%', end: 'center 55%', scrub: true },
-    });
+    const reelST = { trigger: '#reel', start: 'top 90%', end: 'center 55%', scrub: true };
+    gsap.fromTo('#reelFrame', { clipPath: 'inset(19% 19% 19% 19% round 18px)' }, { clipPath: 'inset(0% 0% 0% 0% round 6px)', ease: 'none', scrollTrigger: reelST });
+    gsap.fromTo('#reelVideo', { scale: 1.12 }, { scale: 1, ease: 'none', scrollTrigger: reelST });
   }
   const reelVideo = $('#reelVideo');
   ScrollTrigger.create({
@@ -377,6 +392,7 @@ async function boot() {
   target = 1;
   await new Promise((r) => setTimeout(r, TEST ? 0 : 260));   // let the count land on 100
   counting = false;
+  num.textContent = 100; bar.style.transform = 'scaleX(1)';
   draw(0);
   revealPage();
   setupScroll();

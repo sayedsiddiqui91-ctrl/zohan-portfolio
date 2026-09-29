@@ -34,7 +34,7 @@
     <a href="#about">About</a>
     <a href="#contact">Contact</a>
   </nav>
-  <a class="nav-cv" data-cv download>Download CV</a>
+  <a class="nav-cv" data-cv download aria-label="Download CV"><span class="long">Download </span>CV</a>
 </header>
 
 <main id="top">
@@ -163,9 +163,9 @@
   </footer>
 </main>
 
-<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lbTitle" data-lenis-prevent>
   <button class="lb-close" id="lbClose" type="button">Close</button>
-  <div class="lb-meta"><p class="kicker light" id="lbKind"></p><h3 id="lbTitle"></h3><p id="lbBlurb"></p><a class="lb-link" id="lbLink" href="#" target="_blank" rel="noopener">View on Behance <span aria-hidden="true">↗</span></a></div>
+  <div class="lb-meta"><p class="kicker light" id="lbKind"></p><h3 id="lbTitle"></h3><p id="lbBlurb"></p><a class="lb-link" id="lbWatch" href="#" target="_blank" rel="noopener" hidden>Watch the animation <span aria-hidden="true">↗</span></a><a class="lb-link" id="lbLink" href="#" target="_blank" rel="noopener">View on Behance <span aria-hidden="true">↗</span></a></div>
   <div class="lb-media" id="lbMedia"></div>
 </div>
 
