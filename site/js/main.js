@@ -149,22 +149,45 @@ function resizeCanvas() {
   canvas.height = Math.round(canvas.clientHeight * dpr);
   drawn = -1; draw(wanted);
 }
-let focusX = null;
+let focusX = null, edgeX = null, headTop = null;
 function placement(k) {
   const { w, h, boxes } = set.meta;
   const cw = canvas.width, ch = canvas.height;
   const portrait = cw / ch < 1.1;
-  // phones: pull back from a full cover crop so his name fits above him
-  const s = Math.max(cw / w, ch / h) * (portrait ? 0.74 : 1);
-  const dw = w * s, dh = h * s;
-  let dx = (cw - dw) / 2;
-  if (portrait && boxes[k]) {
-    const b = boxes[k], fx = (b[0] + b[2]) / 2;
-    focusX = focusX == null ? fx : focusX + (fx - focusX) * 0.2;
-    dx = Math.min(0, Math.max(cw - dw, cw * 0.5 - focusX * dw));
+  if (portrait) {
+    // phones: pull back from a full cover crop so his name fits above him
+    const s = Math.max(cw / w, ch / h) * 0.74;
+    const dw = w * s, dh = h * s;
+    let dx = (cw - dw) / 2;
+    if (boxes[k]) {
+      const b = boxes[k], fx = (b[0] + b[2]) / 2;
+      focusX = focusX == null ? fx : focusX + (fx - focusX) * 0.2;
+      dx = Math.min(0, Math.max(cw - dw, cw * 0.5 - focusX * dw));
+    }
+    return { dx, dy: ch - dh, dw, dh }; // he always stands on the bottom edge
   }
-  return { dx, dy: ch - dh, dw, dh }; // he always stands on the bottom edge
+  // Landscape: cover the screen, but never let his head rise into the nav. On wide,
+  // short windows a full cover pushes the top of the frame (and his head) off-screen,
+  // so the scale is capped so his highest head position clears the nav with headroom.
+  // One scale for the whole film, so he never pumps in size while scrubbing.
+  if (headTop == null) headTop = boxes.length ? Math.min(...boxes.map((b) => b[1])) : 0.07;
+  const px = cw / canvas.clientWidth;                       // canvas pixels per CSS pixel
+  const safe = Math.max(88 * px, ch * 0.1);                 // nav (~76px) plus headroom
+  const s = Math.min(Math.max(cw / w, ch / h), (ch - safe) / ((1 - headTop) * h));
+  const dw = w * s, dh = h * s, gap = cw - dw;
+  let dx = gap / 2;
+  if (gap > 0 && boxes[k]) {
+    // narrower than the screen: slide toward whichever edge his body is cut by, so the
+    // cut edge of the frame stays off-screen instead of showing mid-screen
+    const b = boxes[k];
+    const clamp = (v) => Math.min(1, Math.max(0, v));
+    const pull = clamp((b[2] - 0.92) / 0.06) - clamp((0.08 - b[0]) / 0.06);   // -1 left .. 1 right
+    edgeX = edgeX == null ? pull : edgeX + (pull - edgeX) * 0.25;
+    dx = gap / 2 * (1 + edgeX);
+  }
+  return { dx, dy: ch - dh, dw, dh };
 }
+
 // One frame at a time: cross-fading two cut-outs of a moving figure ghosts his edges.
 // Frames are stored cropped to his outline (meta.crops), which keeps GPU memory low.
 function draw(f) {
