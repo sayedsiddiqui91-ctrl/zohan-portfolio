@@ -28,12 +28,18 @@ function fillContent() {
   $('#locationText').textContent = P.location;
   $('#year').textContent = new Date().getFullYear();
 
-  $('#projects').innerHTML = PROJECTS.filter((p) => !p.video).map((p) => `
+  const work = PROJECTS.filter((p) => !p.video);
+  $('#projects').innerHTML = work.filter((p) => p.featured).map((p) => `
     <button class="project" type="button" data-id="${p.id}" aria-label="Open project: ${p.title}">
-      <div class="project-img"><img src="${p.images[0] || p.cover}" alt="" loading="lazy"></div>
+      <div class="project-img"><img src="${p.cover}" alt="" loading="lazy" decoding="async"></div>
       <div class="project-meta"><h3>${p.title}<span class="open" aria-hidden="true">↗</span></h3><p>${p.kind}</p></div>
     </button>`).join('');
-  $$('.project').forEach((b) => b.addEventListener('click', () => openProject(PROJECTS.find((p) => p.id === b.dataset.id), b)));
+  $('#indexList').innerHTML = work.filter((p) => !p.featured).map((p) => `
+    <li><button class="index-row" type="button" data-id="${p.id}" aria-label="Open project: ${p.title}">
+      <img class="index-thumb" src="${p.cover}" alt="" loading="lazy" decoding="async">
+      <strong>${p.title}</strong><span>${p.kind}</span><i aria-hidden="true">↗</i>
+    </button></li>`).join('');
+  $$('.project, .index-row').forEach((b) => b.addEventListener('click', () => openProject(PROJECTS.find((p) => p.id === b.dataset.id), b)));
 }
 
 // ------------------------------------------------------------------ lightbox
@@ -48,8 +54,9 @@ function openProject(p, opener) {
     v.src = p.video; v.poster = p.cover; v.controls = true; v.playsInline = true; v.autoplay = true;
     m.appendChild(v);
   }
-  for (const src of p.images) { const im = new Image(); im.src = src; im.alt = p.title; im.loading = 'lazy'; m.appendChild(im); }
+  p.images.forEach((src, i) => { const im = new Image(); im.src = src; im.alt = `${p.title}, image ${i + 1}`; im.decoding = 'async'; if (i > 1) im.loading = 'lazy'; m.appendChild(im); });
   $('#lbKind').textContent = p.kind; $('#lbTitle').textContent = p.title; $('#lbBlurb').textContent = p.blurb;
+  const link = $('#lbLink'); link.hidden = !p.link; if (p.link) link.href = p.link;
   lb.hidden = false; lb.scrollTop = 0;
   lenis?.stop();
   $('#reelVideo').pause();
@@ -66,7 +73,11 @@ $('#lbClose').addEventListener('click', closeLightbox);
 addEventListener('keydown', (e) => {
   if (lb.hidden) return;
   if (e.key === 'Escape') closeLightbox();
-  if (e.key === 'Tab') { e.preventDefault(); $('#lbClose').focus(); } // keep focus inside the dialog
+  if (e.key === 'Tab') { // keep focus inside the dialog
+    const stops = [$('#lbClose'), $('#lbLink')].filter((el) => !el.hidden);
+    const k = stops.indexOf(document.activeElement);
+    e.preventDefault(); stops[(k + (e.shiftKey ? -1 : 1) + stops.length) % stops.length].focus();
+  }
 });
 $('#reelPlay').addEventListener('click', () => openProject(PROJECTS.find((p) => p.video), $('#reelPlay')));
 
@@ -242,6 +253,9 @@ function setupScroll() {
       gsap.from(p.querySelector('.project-meta'), { y: 20, autoAlpha: 0, duration: 0.9, delay: 0.3, ease: 'power3.out', scrollTrigger: st });
       gsap.fromTo(p.querySelector('.project-img img'), { yPercent: -8 }, { yPercent: 4, ease: 'none', scrollTrigger: { trigger: p, start: 'top bottom', end: 'bottom top', scrub: true } });
     });
+    $$('.index-list li').forEach((li, i) => {
+      gsap.from(li, { y: 34, autoAlpha: 0, duration: 0.9, delay: (i % 4) * 0.05, ease: 'power3.out', scrollTrigger: { trigger: li, start: 'top 96%' } });
+    });
     gsap.from('.portrait', { clipPath: 'inset(0% 0% 100% 0%)', duration: 1.5, ease: 'expo.inOut', scrollTrigger: { trigger: '.portrait', start: 'top 82%' } });
     gsap.fromTo('.portrait img', { yPercent: -6, scale: 1.12 }, { yPercent: 4, scale: 1, ease: 'none', scrollTrigger: { trigger: '.portrait', start: 'top bottom', end: 'bottom top', scrub: true } });
     $$('.timeline li').forEach((li, i) => {
@@ -274,6 +288,22 @@ function setupPointer() {
     b.addEventListener('pointermove', (e) => { const r = b.getBoundingClientRect(); bx((e.clientX - r.left - r.width / 2) * 0.25); by((e.clientY - r.top - r.height / 2) * 0.35); });
     b.addEventListener('pointerleave', () => { bx(0); by(0); });
   });
+  // project index: a preview of the hovered render trails the cursor
+  const list = $('#indexList'), peek = $('#indexPeek');
+  gsap.set(peek, { xPercent: -50, yPercent: -58, scale: 0.86 });
+  const px = gsap.quickTo(peek, 'x', { duration: 0.55, ease: 'power3.out' });
+  const py = gsap.quickTo(peek, 'y', { duration: 0.55, ease: 'power3.out' });
+  const show = (id) => $$('img', peek).forEach((im) => im.classList.toggle('on', im.dataset.id === id));
+  list.addEventListener('pointerenter', (e) => {
+    if (!peek.children.length) peek.innerHTML = $$('.index-row').map((r) => `<img src="${r.querySelector('img').getAttribute('src')}" alt="" data-id="${r.dataset.id}">`).join('');
+    gsap.set(peek, { x: e.clientX, y: e.clientY });
+    gsap.to(peek, { autoAlpha: 1, scale: 1, duration: 0.45, ease: 'expo.out', overwrite: 'auto' });
+  });
+  list.addEventListener('pointerleave', () => gsap.to(peek, { autoAlpha: 0, scale: 0.86, duration: 0.3, ease: 'power2.in', overwrite: 'auto' }));
+  list.addEventListener('pointermove', (e) => { px(e.clientX); py(e.clientY); });
+  $$('.index-row').forEach((r) => r.addEventListener('pointerenter', () => show(r.dataset.id)));
+  list.addEventListener('click', () => gsap.set(peek, { autoAlpha: 0 }));
+
   const paper = $('#cvPaper'), img = $('#cvPaper img');
   paper.addEventListener('pointermove', (e) => {
     const r = paper.getBoundingClientRect();
@@ -283,9 +313,19 @@ function setupPointer() {
   paper.addEventListener('pointerleave', () => { img.style.transform = ''; });
 }
 
+// the loader lifts away like a sheet while the intro starts underneath it
+function revealPage() {
+  const el = $('#loader');
+  document.body.classList.remove('loading');
+  if (!gsap || reduced || TEST) { el.classList.add('done'); return; }
+  gsap.timeline({ onComplete: () => el.classList.add('done') })
+    .to('#loader > *', { y: -30, autoAlpha: 0, duration: 0.45, ease: 'power3.in', stagger: 0.04 }, 0)
+    .to(el, { yPercent: -100, duration: 1, ease: 'expo.inOut' }, 0.15);
+}
+
 function playIntro() {
   if (!gsap || reduced || TEST) return;
-  gsap.timeline({ defaults: { ease: 'expo.out' } })
+  gsap.timeline({ delay: 0.35, defaults: { ease: 'expo.out' } })
     .from('.name-row > span', { yPercent: 110, duration: 1.6, stagger: 0.12 }, 0.1)
     .from('#film', { autoAlpha: 0, scale: 1.06, transformOrigin: '50% 100%', duration: 1.8 }, 0)
     .from('.beat-0 > *', { y: 24, autoAlpha: 0, duration: 1.1, stagger: 0.08 }, 0.5)
@@ -311,25 +351,38 @@ async function boot() {
   addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
+  // The loader waits only for what the first screen needs: frame 0, the backdrop and a
+  // coarse pass of the film (every 16th frame, enough to scrub). Everything else
+  // streams in behind the page, and a slow connection never holds it past ~2 s.
   const order = loadOrder(set.meta.count);
-  // a coarse half of the frames gates the reveal; the rest stream in after
-  const stride = set.meta.count > 120 ? 4 : 2;
-  const cut = order.findIndex((i) => i % stride !== 0);
-  const gate = order.slice(0, cut < 0 ? order.length : cut);
-  let done = 0;
+  const coarse = order.filter((i) => i % 16 === 0 && i !== 0);
   const num = $('#loaderNum'), bar = $('#loaderBar');
-  const tick = () => { const p = done / gate.length; num.textContent = Math.round(p * 100); bar.style.transform = `scaleX(${p})`; };
-  const queue = [...gate];
-  await Promise.all(Array.from({ length: 6 }, async () => {
-    while (queue.length) { const i = queue.shift(); await loadFrame(i); done++; tick(); if (i === 0) draw(0); }
-  }));
+  let target = 0, shown = 0, done = 0, counting = true;
+  const total = coarse.length + 2;
+  const bump = () => { done++; target = done / total; };
+  (function count() {
+    shown += (target - shown) * 0.16;
+    if (target - shown < 0.004) shown = target;
+    num.textContent = Math.round(shown * 100); bar.style.transform = `scaleX(${shown})`;
+    if (counting) requestAnimationFrame(count);
+  })();
+  const bd = $('.backdrop');
+  const backdrop = (bd.complete ? Promise.resolve() : new Promise((r) => { bd.onload = bd.onerror = r; })).then(bump);
+  const first = loadFrame(0).then(() => { draw(0); bump(); });
+  const queue = [...coarse];
+  const gate = Promise.all([backdrop, first, ...Array.from({ length: 6 }, async () => {
+    while (queue.length) { await loadFrame(queue.shift()); bump(); }
+  })]);
+  await Promise.race([gate, first.then(() => new Promise((r) => setTimeout(r, 2000)))]);
+  target = 1;
+  await new Promise((r) => setTimeout(r, TEST ? 0 : 260));   // let the count land on 100
+  counting = false;
   draw(0);
-  document.body.classList.remove('loading');
-  $('#loader').classList.add('done');
+  revealPage();
   setupScroll();
   setupPointer();
   playIntro();
-  const rest = order.filter((i) => !frames[i]);
+  const rest = order.filter((i) => !frames[i] && i % 16 !== 0);   // coarse frames are still in the gate queue
   await Promise.all(Array.from({ length: 4 }, async () => { while (rest.length) await loadFrame(rest.shift()); }));
   drawn = -1; draw(wanted);
 }

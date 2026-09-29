@@ -28,8 +28,10 @@ Pushing to `main` deploys `site/` through GitHub Pages
 
 ## Edit content
 
-- **Projects, bio, experience, contact:** `site/js/content.js`. Project titles are
-  placeholders written from the render frames; rename them. Images go in `site/assets/work/`.
+- **Projects, bio, experience, contact:** `site/js/content.js`. Projects come from his
+  Behance; `featured: true` puts one in the large cards, the rest go in the "More projects"
+  index. Images live in `site/assets/work/p/` as `<name>-<n>.webp` (2000px, lightbox) and
+  `<name>-<n>-s.webp` (1100px, cards and previews).
 - **CV:** replace `site/assets/cv/Abdullah-Al-Abrar-CV.pdf` (and `cv-page.jpg` for the preview).
 - **Film:** `site/assets/work/building-render.mp4`.
 

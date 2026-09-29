@@ -15,6 +15,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="preload" href="assets/seq/backdrop.jpg" as="image">
+<link rel="modulepreload" href="js/main.js">
+<link rel="modulepreload" href="js/content.js">
 </head>
 <body class="loading">
 
@@ -95,6 +98,15 @@
     </div>
 
     <div class="projects" id="projects"></div>
+
+    <div class="index" id="index">
+      <div class="index-head">
+        <h3>More projects</h3>
+        <a class="index-all" id="behanceAll" href="https://www.behance.net/johanabrar" target="_blank" rel="noopener">Everything on Behance <span aria-hidden="true">↗</span></a>
+      </div>
+      <ul class="index-list" id="indexList"></ul>
+      <div class="index-peek" id="indexPeek" aria-hidden="true"></div>
+    </div>
   </section>
 
   <!-- ABOUT -->
@@ -153,8 +165,8 @@
 
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lbTitle">
   <button class="lb-close" id="lbClose" type="button">Close</button>
+  <div class="lb-meta"><p class="kicker light" id="lbKind"></p><h3 id="lbTitle"></h3><p id="lbBlurb"></p><a class="lb-link" id="lbLink" href="#" target="_blank" rel="noopener">View on Behance <span aria-hidden="true">↗</span></a></div>
   <div class="lb-media" id="lbMedia"></div>
-  <div class="lb-meta"><p class="kicker light" id="lbKind"></p><h3 id="lbTitle"></h3><p id="lbBlurb"></p></div>
 </div>
 
 <noscript><style>.loader{display:none}body.loading{overflow:auto}</style></noscript>
