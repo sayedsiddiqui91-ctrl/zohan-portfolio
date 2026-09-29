@@ -1,0 +1,14 @@
+# source material and working folders stay local
+/*.png
+/*.jpg
+/*.mp4
+/*.pdf
+/archive/
+/clean/
+/.img2threejs/
+/.renders/
+/scrollcraft/
+/.claude/
+node_modules/
+.DS_Store
+Thumbs.db

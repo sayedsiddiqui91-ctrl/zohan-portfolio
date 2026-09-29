@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abdullah Al Abrar · Architect &amp; 3D Visualizer</title>
+<meta name="description" content="Abdullah Al Abrar (Zohan), architect and 3D visualizer in Dhaka. Photoreal renders, walkthrough films and interiors that let you see a space before it exists.">
+<meta name="theme-color" content="#c9ccd2">
+<meta property="og:title" content="Abdullah Al Abrar · Architect & 3D Visualizer">
+<meta property="og:description" content="Spaces, before they exist.">
+<meta property="og:image" content="assets/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23111214'/><text x='50%25' y='56%25' text-anchor='middle' dominant-baseline='middle' font-family='Arial' font-weight='800' font-size='26' fill='%23d9a765'>AC</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="loading">
+
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-count"><span id="loaderNum">0</span><sup>%</sup></div>
+  <div class="loader-name">Abdullah Al Abrar</div>
+  <div class="loader-bar"><i id="loaderBar"></i></div>
+</div>
+
+<header class="nav" id="nav">
+  <a href="#top" class="nav-mark" aria-label="Abdullah Al Abrar, back to top">A<span>.</span>C</a>
+  <nav aria-label="Primary">
+    <a href="#work">Work</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <a class="nav-cv" data-cv download>Download CV</a>
+</header>
+
+<main id="top">
+  <!-- HERO: his film scrubs under the reader's hand; the name sits behind him -->
+  <section class="hero" id="hero" aria-label="Introduction">
+    <div class="stage" id="stage">
+      <img class="backdrop" src="assets/seq/backdrop.jpg" alt="" aria-hidden="true">
+      <div class="name" id="bigName" aria-hidden="true">
+        <span class="name-row"><span>Abdullah</span></span>
+        <span class="name-row"><span>Al Abrar</span></span>
+      </div>
+      <canvas id="film" role="img" aria-label="Abdullah Al Abrar in a dark suit; the camera pulls back from his face to a full-length portrait"></canvas>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="scrim" aria-hidden="true"></div>
+      <div class="dim" id="stageDim" aria-hidden="true"></div>
+
+      <div class="beat beat-0">
+        <h1 class="sr-only">Abdullah Al Abrar, architect and 3D visualizer</h1>
+        <p class="hero-role">Architect <i>&amp;</i> 3D Visualizer</p>
+        <p class="hero-meta">Dhaka, Bangladesh. Currently at Trimatrik Studio.</p>
+      </div>
+
+      <div class="beat beat-1">
+        <h2 class="beat-title">I design<br>buildings.</h2>
+      </div>
+
+      <div class="beat beat-2">
+        <h2 class="beat-title">Then I let you<br>walk through them,<br><i>before a brick is laid.</i></h2>
+      </div>
+
+      <div class="beat beat-3">
+        <p class="beat-lede">Photoreal renders, walkthrough films and interiors, made so clients can <i>feel</i> a space instead of reading a plan.</p>
+        <p class="creds">Trimatrik Studio · South Heaven Architects · SEBL DX Group<br><span>B.Arch, American International University-Bangladesh</span></p>
+        <div class="cta-row">
+          <a href="#work" class="btn btn-dark">See the work</a>
+          <a class="btn btn-line" data-cv download>Download CV</a>
+        </div>
+      </div>
+
+      <div class="progress" aria-hidden="true"><i id="heroProgress"></i></div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section class="work" id="work" aria-labelledby="workTitle">
+    <header class="section-head">
+      <p class="kicker light">Selected work</p>
+      <h2 id="workTitle" class="display">Spaces, <i>before</i><br>they exist.</h2>
+    </header>
+
+    <div class="reel" id="reel">
+      <div class="reel-frame" id="reelFrame">
+        <video id="reelVideo" muted loop playsinline preload="none" poster="assets/work/poster.jpg" aria-label="Residential walkthrough film, muted preview">
+          <source src="assets/work/building-render.mp4" type="video/mp4">
+        </video>
+        <div class="reel-meta">
+          <p><span>Film</span> Residential walkthrough, 33 s</p>
+          <button class="reel-play" id="reelPlay" type="button">Watch with sound</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="projects" id="projects"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about" aria-labelledby="aboutTitle">
+    <div class="about-grid">
+      <figure class="portrait">
+        <img src="assets/img/portrait.jpg" alt="Portrait of Abdullah Al Abrar" loading="lazy" width="800" height="903">
+      </figure>
+      <div class="about-copy">
+        <h2 id="aboutTitle" class="display dark">Trained as an<br>architect. <i>Obsessed</i><br>with light.</h2>
+        <p class="about-lede" id="aboutIntro"></p>
+        <h3 class="list-title">Experience</h3>
+        <ol class="timeline" id="timeline"></ol>
+        <h3 class="list-title">Education</h3>
+        <ol class="timeline" id="education"></ol>
+      </div>
+    </div>
+    <div class="marquee" aria-label="Tools he works in">
+      <div class="marquee-track" id="tools"></div>
+    </div>
+  </section>
+
+  <!-- CV -->
+  <section class="cv" id="cv" aria-labelledby="cvTitle">
+    <div class="cv-grid">
+      <div class="cv-copy">
+        <h2 id="cvTitle" class="display">Take my CV<br><i>with you.</i></h2>
+        <p class="cv-lede">One page: experience, education, tools, and a QR code straight back to the portfolio.</p>
+        <div class="cta-row">
+          <a class="btn btn-brass" data-cv download>Download CV</a>
+          <a class="btn btn-line light" id="cvOpen" target="_blank" rel="noopener">Open in new tab</a>
+        </div>
+      </div>
+      <div class="cv-paper" id="cvPaper">
+        <div class="cv-float"><img src="assets/cv/cv-page.jpg" alt="Preview of Abdullah Al Abrar's one-page CV" loading="lazy" width="1191" height="1684"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT: the close resolves and holds -->
+  <footer class="contact" id="contact" aria-labelledby="contactTitle">
+    <h2 id="contactTitle" class="display dark">Let’s build<br>something <i>real.</i></h2>
+    <a class="mail" id="mailLink"></a>
+    <div class="contact-grid">
+      <div><span>Phone</span><a id="phoneLink"></a></div>
+      <div><span>Behance</span><a id="behanceLink" target="_blank" rel="noopener">behance.net/johanabrar</a></div>
+      <div><span>Website</span><a id="siteLink" target="_blank" rel="noopener">A. Conception</a></div>
+      <div><span>Studio</span><p id="locationText"></p></div>
+    </div>
+    <div class="foot">
+      <span>© <span id="year"></span> Abdullah Al Abrar</span>
+      <a href="#top">Back to top</a>
+    </div>
+  </footer>
+</main>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+  <button class="lb-close" id="lbClose" type="button">Close</button>
+  <div class="lb-media" id="lbMedia"></div>
+  <div class="lb-meta"><p class="kicker light" id="lbKind"></p><h3 id="lbTitle"></h3><p id="lbBlurb"></p></div>
+</div>
+
+<noscript><style>.loader{display:none}body.loading{overflow:auto}</style></noscript>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
