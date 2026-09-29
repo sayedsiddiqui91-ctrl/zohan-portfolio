@@ -6,10 +6,11 @@ The frames are mostly transparent, and a full-size frame costs the same GPU memo
 whether it is empty or not. Cropping each one to its alpha bounding box (plus a
 small margin) cuts decoded memory by more than half. The offsets go into
 meta.json as `crops` ([x, y, w, h] in full-frame pixels), and the page draws each
-cropped frame back at its original position. Safe to run again: frames that are
+cropped frame back at its original position. `v` is a hash of the frames, used by
+the page to version frame URLs. Safe to run again: frames that are
 already cropped keep their stored offsets.
 """
-import glob, json, os, sys
+import glob, hashlib, json, os, sys
 import numpy as np
 from PIL import Image
 
@@ -42,6 +43,11 @@ def main(folder):
         if hh and ww and blk[:hh, :ww].reshape(hh // 32, 32, ww // 32, 32).all(axis=(1, 3)).any():
             print(f'WARNING: {os.path.basename(path)} has solid black blocks (damaged frame)')
     meta['crops'] = crops
+    # content version: the page appends it to every frame URL, so a browser holding
+    # an older frame (or an older meta.json) can never mix the two
+    h = hashlib.sha1()
+    for path in sorted(glob.glob(os.path.join(folder, 'f*.webp'))): h.update(open(path, 'rb').read())
+    meta['v'] = h.hexdigest()[:10]
     json.dump(meta, open(meta_path, 'w'), separators=(',', ':'))
     print(f'{len(crops)} frames, decoded pixels {before / 1e6:.0f}M -> {after / 1e6:.0f}M ({after / before:.0%})')
 

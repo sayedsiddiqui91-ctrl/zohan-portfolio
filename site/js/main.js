@@ -109,7 +109,9 @@ let set = { dir: 'assets/seq', meta: { count: 192, w: 1280, h: 720, boxes: [] } 
 const frames = [];
 let wanted = 0, drawn = -1;
 
-const frameUrl = (i) => `${set.dir}/f${String(i).padStart(3, '0')}.webp`;
+// frame URLs carry the set's content version, so cached frames from an older build
+// are never drawn with a newer meta.json (or the other way round)
+const frameUrl = (i) => `${set.dir}/f${String(i).padStart(3, '0')}.webp${set.meta.v ? `?v=${set.meta.v}` : ''}`;
 // Each frame is decoded once, off the main thread, into an ImageBitmap that stays
 // ready to draw, so scrubbing never waits on a decode.
 function loadFrame(i) {
@@ -366,7 +368,7 @@ async function pickFrameSet() {
   const saveData = navigator.connection && (navigator.connection.saveData || /2g|3g/.test(navigator.connection.effectiveType || ''));
   for (const dir of saveData ? ['assets/seq'] : ['assets/seq-hd', 'assets/seq']) {
     try {
-      const r = await fetch(`${dir}/meta.json`);
+      const r = await fetch(`${dir}/meta.json`, { cache: 'no-cache' });   // always revalidate: it names the frame version
       if (r.ok) return { dir, meta: await r.json() };
     } catch { /* try the next set */ }
   }
