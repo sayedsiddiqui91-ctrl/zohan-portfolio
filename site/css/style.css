@@ -204,7 +204,7 @@ i { font-style: italic; }
 /* ---------------- about ---------------- */
 .about { background: var(--stone); padding: var(--section) 0 0; overflow: hidden; }
 .about-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(30px, 6vw, 110px); padding: 0 var(--gutter); align-items: start; }
-.portrait { margin: 0; position: sticky; top: 12vh; border-radius: 14px; overflow: hidden; aspect-ratio: 800 / 903; background: var(--stone-3); box-shadow: var(--e2); }
+.portrait { margin: 0; position: sticky; top: 12vh; border-radius: 14px; overflow: hidden; aspect-ratio: 1000 / 1340; background: var(--stone-3); box-shadow: var(--e2); }
 .portrait img { width: 100%; height: 112%; object-fit: cover; }
 .about-lede { font-size: clamp(20px, 1.8vw, 26px); line-height: 1.4; letter-spacing: -.02em; margin: 34px 0 64px; max-width: 34ch; color: var(--ink-2); }
 .list-title { font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 8px; }
@@ -246,6 +246,10 @@ i { font-style: italic; }
 .lb-media { max-width: 1400px; margin: 0 auto; display: grid; gap: 16px; }
 .lb-media img, .lb-media video { width: 100%; height: auto; border-radius: 10px; background: #000; }
 .lb-meta { max-width: 1400px; margin: 0 auto 34px; }
+.lb-yt { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #000; }
+.lb-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.play-badge { position: absolute; left: 14px; bottom: 14px; z-index: 1; display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px 8px 11px; border-radius: 999px; background: rgba(9, 10, 12, .72); color: var(--paper); font-size: 12px; font-weight: 600; letter-spacing: .02em; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.play-badge::before { content: ""; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px; border-color: transparent transparent transparent var(--brass-l); }
 .lb-link { display: inline-block; margin: 6px 22px 0 0; font-size: 14px; font-weight: 600; color: var(--brass-l); }
 .lb-link[hidden] { display: none; }
 .lb-meta h3 { font-size: clamp(30px, 4vw, 54px); letter-spacing: -.045em; margin: 0 0 10px; }

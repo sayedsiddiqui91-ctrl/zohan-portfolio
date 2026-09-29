@@ -43,7 +43,7 @@ function fillContent() {
   }
   $('#projects').innerHTML = featured.map((p, i) => `
     <button class="project" type="button" data-id="${p.id}" style="${place[i]}" aria-label="Open project ${p.no}: ${p.title}">
-      <div class="project-img" style="aspect-ratio:${p.ratio || '4 / 3'}"><img src="${p.cover}" alt="" loading="lazy" decoding="async"></div>
+      <div class="project-img" style="aspect-ratio:${p.ratio || '4 / 3'}"><img src="${p.cover}" alt="" loading="lazy" decoding="async">${p.youtube ? '<span class="play-badge">Animation</span>' : ''}</div>
       <div class="project-meta"><span class="project-no" aria-hidden="true">${p.no}</span><h3>${p.title}<span class="open" aria-hidden="true">↗</span></h3><p>${p.kind}</p></div>
     </button>`).join('');
   $('#indexList').innerHTML = work.filter((p) => !p.featured).map((p) => `
@@ -66,10 +66,15 @@ function openProject(p, opener) {
     v.src = p.video; v.poster = p.cover; v.controls = true; v.playsInline = true; v.autoplay = true;
     m.appendChild(v);
   }
+  if (p.youtube) {
+    const wrap = document.createElement('div'); wrap.className = 'lb-yt';
+    wrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${p.youtube}?rel=0&modestbranding=1&playsinline=1" title="${p.title} animation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+    m.appendChild(wrap);
+  }
   p.images.forEach((src, i) => { const im = new Image(); im.src = src; im.alt = `${p.title}, image ${i + 1}`; im.decoding = 'async'; if (i > 1) im.loading = 'lazy'; m.appendChild(im); });
   $('#lbKind').textContent = p.kind; $('#lbTitle').textContent = p.title; $('#lbBlurb').textContent = p.blurb;
   const link = $('#lbLink'); link.hidden = !p.link; if (p.link) link.href = p.link;
-  const watch = $('#lbWatch'); watch.hidden = !p.watch; if (p.watch) watch.href = p.watch;
+  const watch = $('#lbWatch'); watch.hidden = !p.youtube; if (p.youtube) watch.href = `https://www.youtube.com/watch?v=${p.youtube}`;
   lb.hidden = false; lb.scrollTop = 0;
   document.documentElement.classList.add('lb-open');   // page behind stays put, with or without Lenis
   lenis?.stop();
@@ -78,6 +83,7 @@ function openProject(p, opener) {
 }
 function closeLightbox() {
   const v = $('#lbMedia video'); if (v) v.pause();
+  $('#lbMedia').innerHTML = '';   // also unloads a YouTube player, which stops its sound
   lb.hidden = true;
   document.documentElement.classList.remove('lb-open');
   lenis?.start();
@@ -89,7 +95,7 @@ addEventListener('keydown', (e) => {
   if (lb.hidden) return;
   if (e.key === 'Escape') closeLightbox();
   if (e.key === 'Tab') { // keep focus inside the dialog
-    const stops = [$('#lbClose'), $('#lbWatch'), $('#lbLink')].filter((el) => !el.hidden);
+    const stops = [$('#lbClose'), $('#lbMedia iframe'), $('#lbWatch'), $('#lbLink')].filter((el) => el && !el.hidden);
     const k = stops.indexOf(document.activeElement);
     e.preventDefault(); stops[(k + (e.shiftKey ? -1 : 1) + stops.length) % stops.length].focus();
   }
@@ -98,20 +104,29 @@ $('#reelPlay').addEventListener('click', () => openProject(PROJECTS.find((p) => 
 
 // ------------------------------------------------------------------ film frames
 const canvas = $('#film');
-const ctx = canvas.getContext('2d');
+// A CPU-backed canvas: the GPU path flashed whole frames as black rectangles on
+// integrated graphics (a frame's texture dropped mid-draw). Frames are small and
+// cropped, so drawing them on the CPU costs a few milliseconds.
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
 let set = { dir: 'assets/seq', meta: { count: 192, w: 1280, h: 720, boxes: [] } };
 const frames = [];
 let wanted = 0, drawn = -1;
 
 const frameUrl = (i) => `${set.dir}/f${String(i).padStart(3, '0')}.webp`;
+// Each frame is decoded once, off the main thread, into an ImageBitmap the browser
+// keeps ready to draw (an <img> can be discarded and half re-decoded mid-scrub).
 function loadFrame(i) {
-  return new Promise((res) => {
+  const url = frameUrl(i);
+  const asImage = () => new Promise((res) => {
     const im = new Image();
-    im.decoding = 'async';
-    im.onload = () => { (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => { frames[i] = im; res(true); }); };
-    im.onerror = () => res(false);
-    im.src = frameUrl(i);
+    im.onload = () => (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => res(im));
+    im.onerror = () => res(null);
+    im.src = url;
   });
+  const job = window.createImageBitmap
+    ? fetch(url).then((r) => (r.ok ? r.blob() : Promise.reject())).then((b) => createImageBitmap(b)).catch(asImage)
+    : asImage();
+  return job.then((bm) => { if (bm) frames[i] = bm; return !!bm; });
 }
 // coarse-to-fine: scrubbing works early, detail fills in
 function loadOrder(n) {
@@ -126,7 +141,11 @@ function nearestLoaded(i) {
   return -1;
 }
 function resizeCanvas() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // never back the canvas with more pixels than the frames carry: past that it only
+  // costs drawing time (the frames are 1920px wide at most)
+  const cw = canvas.clientWidth, chh = canvas.clientHeight;
+  const css = Math.max(cw / set.meta.w, chh / set.meta.h) * (cw / chh < 1.1 ? 0.74 : 1);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2, Math.max(1, 1 / css));
   canvas.width = Math.round(canvas.clientWidth * dpr);
   canvas.height = Math.round(canvas.clientHeight * dpr);
   drawn = -1; draw(wanted);
