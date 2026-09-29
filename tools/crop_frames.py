@@ -10,6 +10,7 @@ cropped frame back at its original position. Safe to run again: frames that are
 already cropped keep their stored offsets.
 """
 import glob, json, os, sys
+import numpy as np
 from PIL import Image
 
 PAD = 2
@@ -31,6 +32,15 @@ def main(folder):
         im.crop((x0, y0, x1, y1)).save(path, 'WEBP', quality=82, method=6)
         crops.append([x0, y0, x1 - x0, y1 - y0])
         before += W * H; after += (x1 - x0) * (y1 - y0)
+    # a solid opaque-black block means a damaged source frame (e.g. a failed GPU tile
+    # in the upscaler); it shows as a black rectangle on the page, so flag it loudly
+    for i, path in enumerate(sorted(glob.glob(os.path.join(folder, 'f*.webp')))):
+        arr = np.asarray(Image.open(path).convert('RGBA')).astype(int)
+        h, w = arr.shape[:2]
+        blk = (arr[..., 3] > 250) & (arr[..., :3].max(axis=2) < 4)
+        hh, ww = (h // 32) * 32, (w // 32) * 32
+        if hh and ww and blk[:hh, :ww].reshape(hh // 32, 32, ww // 32, 32).all(axis=(1, 3)).any():
+            print(f'WARNING: {os.path.basename(path)} has solid black blocks (damaged frame)')
     meta['crops'] = crops
     json.dump(meta, open(meta_path, 'w'), separators=(',', ':'))
     print(f'{len(crops)} frames, decoded pixels {before / 1e6:.0f}M -> {after / 1e6:.0f}M ({after / before:.0%})')

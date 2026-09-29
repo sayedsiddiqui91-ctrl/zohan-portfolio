@@ -104,17 +104,14 @@ $('#reelPlay').addEventListener('click', () => openProject(PROJECTS.find((p) => 
 
 // ------------------------------------------------------------------ film frames
 const canvas = $('#film');
-// A CPU-backed canvas: the GPU path flashed whole frames as black rectangles on
-// integrated graphics (a frame's texture dropped mid-draw). Frames are small and
-// cropped, so drawing them on the CPU costs a few milliseconds.
-const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const ctx = canvas.getContext('2d');
 let set = { dir: 'assets/seq', meta: { count: 192, w: 1280, h: 720, boxes: [] } };
 const frames = [];
 let wanted = 0, drawn = -1;
 
 const frameUrl = (i) => `${set.dir}/f${String(i).padStart(3, '0')}.webp`;
-// Each frame is decoded once, off the main thread, into an ImageBitmap the browser
-// keeps ready to draw (an <img> can be discarded and half re-decoded mid-scrub).
+// Each frame is decoded once, off the main thread, into an ImageBitmap that stays
+// ready to draw, so scrubbing never waits on a decode.
 function loadFrame(i) {
   const url = frameUrl(i);
   const asImage = () => new Promise((res) => {
