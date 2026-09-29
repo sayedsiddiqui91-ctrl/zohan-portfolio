@@ -147,21 +147,18 @@ function placement(k) {
   }
   return { dx, dy: ch - dh, dw, dh }; // he always stands on the bottom edge
 }
+// One frame at a time: cross-fading two cut-outs of a moving figure ghosts his edges.
+// Frames are stored cropped to his outline (meta.crops), which keeps GPU memory low.
 function draw(f) {
   wanted = f;
-  const i = Math.floor(f), t = f - i;
-  const a = nearestLoaded(i);
-  if (a < 0) return;
-  const b = t > 0.02 && frames[i + 1] ? i + 1 : -1;
-  const key = a + (b >= 0 ? t : 0) * 0.999;
-  if (Math.abs(key - drawn) < 0.004) return;
-  drawn = key;
-  const p = placement(a);
+  const a = nearestLoaded(Math.round(f));
+  if (a < 0 || a === drawn) return;
+  drawn = a;
+  const p = placement(a), c = set.meta.crops?.[a], s = p.dw / set.meta.w;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.imageSmoothingQuality = 'high';
-  ctx.globalAlpha = 1;
-  ctx.drawImage(frames[a], p.dx, p.dy, p.dw, p.dh);
-  if (b >= 0) { ctx.globalAlpha = t; ctx.drawImage(frames[b], p.dx, p.dy, p.dw, p.dh); ctx.globalAlpha = 1; }
+  if (c) ctx.drawImage(frames[a], p.dx + c[0] * s, p.dy + c[1] * s, c[2] * s, c[3] * s);
+  else ctx.drawImage(frames[a], p.dx, p.dy, p.dw, p.dh);
 }
 
 // ------------------------------------------------------------------ helpers

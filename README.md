@@ -52,6 +52,7 @@ To rebuild from a new clip:
 ffmpeg -i clip.mp4 frames/f%04d.png              # extract frames
 python tools/upscale_crop.py <workdir> meta.json   # optional: AI-upscale his region
 python tools/cutout.py frames site/assets/seq-hd   # cut him out, write meta + backdrop
+python tools/crop_frames.py site/assets/seq-hd      # crop each frame to his outline (less GPU memory)
 ```
 
 ## Layout
