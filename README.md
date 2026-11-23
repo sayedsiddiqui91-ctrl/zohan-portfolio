@@ -34,6 +34,10 @@ Pushing to `main` deploys `site/` through GitHub Pages
   `<name>-<n>-s.webp` (1100px, cards and previews).
 - **CV:** replace `site/assets/cv/Abdullah-Al-Abrar-CV.pdf` (and `cv-page.jpg` for the preview).
 - **Film:** `site/assets/work/building-render.mp4`.
+- **Motion and VFX reel:** `FILMS` in `site/js/content.js`, files in `site/assets/films/`
+  (`<id>.mp4` full film with sound, `<id>-loop.mp4` 6 s silent preview, `<id>.webp` poster).
+  Encode a new one with ffmpeg at about 1280px, CRF 26, `-movflags +faststart`; pick a loop
+  segment without black frames.
 
 ## The hero film
 

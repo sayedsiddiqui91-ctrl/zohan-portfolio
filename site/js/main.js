@@ -3,7 +3,7 @@
 // canvas in front of his name. Scrolling scrubs the film (with a cross-fade
 // between neighbouring frames, so the motion stays continuous) and steps the
 // story; the Work section then rises over the stage like a curtain.
-import { PROFILE, PROJECTS } from './content.js';
+import { PROFILE, PROJECTS, FILMS } from './content.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -24,7 +24,7 @@ function fillContent() {
   $('#tools').innerHTML = [...P.skills, ...P.skills].map((s) => `<span>${s}</span>`).join('');
   const mail = $('#mailLink'); mail.href = `mailto:${P.email}`; mail.textContent = P.email;
   const ph = $('#phoneLink'); ph.href = `tel:${P.phone.replace(/\s/g, '')}`; ph.textContent = P.phone;
-  $('#behanceLink').href = P.behance; $('#siteLink').href = P.website;
+  $('#behanceLink').href = P.behance;
   $('#locationText').textContent = P.location;
   $('#year').textContent = new Date().getFullYear();
 
@@ -52,6 +52,38 @@ function fillContent() {
       <strong>${p.title}</strong><span>${p.kind}</span><i aria-hidden="true">↗</i>
     </button></li>`).join('');
   $$('.project, .index-row').forEach((b) => b.addEventListener('click', () => openProject(PROJECTS.find((p) => p.id === b.dataset.id), b)));
+
+  // films: poster first; the silent loop is attached only when the card nears the screen
+  $('#filmsTrack').innerHTML = FILMS.map((f) => `
+    <button class="film${f.video ? '' : ' film-still'}" type="button" data-film="${f.id}" aria-label="${f.video ? 'Play' : 'Open'} ${f.title}, ${f.kind}${f.length ? `, ${f.length}` : ''}">
+      <span class="film-media">
+        ${f.video ? `<video muted loop playsinline preload="none" poster="${f.cover}" data-src="${f.loop}"></video>` : `<img src="${f.cover}" alt="" loading="lazy" decoding="async">`}
+        ${f.video ? '<span class="film-play" aria-hidden="true"><i></i>Play</span>' : ''}
+        ${f.length ? `<span class="film-len">${f.length}</span>` : ''}
+      </span>
+      <span class="film-meta"><strong>${f.title}</strong><em>${f.kind}</em></span>
+    </button>`).join('');
+  $$('.film').forEach((b) => b.addEventListener('click', () => openProject(FILMS.find((f) => f.id === b.dataset.film), b)));
+  setupFilmLoops();
+}
+
+// Film cards play their silent loop only while on screen (works for the pinned,
+// sideways-moving track too: IntersectionObserver sees transformed positions).
+function setupFilmLoops() {
+  const vids = $$('.film video');
+  if (!('IntersectionObserver' in window)) return;
+  const near = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    const v = e.target;
+    if (!v.src) { v.src = v.dataset.src; v.preload = 'auto'; }
+    near.unobserve(v);
+  }), { rootMargin: '50% 60% 50% 60%' });
+  const seen = new IntersectionObserver((es) => es.forEach((e) => {
+    const v = e.target;
+    if (e.isIntersecting && e.intersectionRatio > 0.45 && lb.hidden && !reduced) { if (!v.src) v.src = v.dataset.src; v.play().catch(() => {}); }
+    else v.pause();
+  }), { threshold: [0, 0.45, 0.8] });
+  vids.forEach((v) => { near.observe(v); seen.observe(v); });
 }
 
 // ------------------------------------------------------------------ lightbox
@@ -79,6 +111,7 @@ function openProject(p, opener) {
   document.documentElement.classList.add('lb-open');   // page behind stays put, with or without Lenis
   lenis?.stop();
   $('#reelVideo').pause();
+  $$('.film video').forEach((fv) => fv.pause());
   $('#lbClose').focus({ preventScroll: true });
 }
 function closeLightbox() {
@@ -88,6 +121,10 @@ function closeLightbox() {
   document.documentElement.classList.remove('lb-open');
   lenis?.start();
   if (reelVisible) $('#reelVideo').play().catch(() => {});
+  if (!reduced) $$('.film video').forEach((fv) => {   // resume the loops that are on screen
+    const r = fv.getBoundingClientRect();
+    if (fv.src && r.right > 0 && r.left < innerWidth && r.bottom > 0 && r.top < innerHeight) fv.play().catch(() => {});
+  });
   lastFocus?.focus?.({ preventScroll: true });
 }
 $('#lbClose').addEventListener('click', closeLightbox);
@@ -219,7 +256,7 @@ function setupScroll() {
   ScrollTrigger.config({ ignoreMobileResize: true });
   if (!reduced && !TEST && window.Lenis) {
     // wheel is smoothed; touch stays native (the phone's own inertia is better than any emulation)
-    lenis = new window.Lenis({ lerp: 0.075, wheelMultiplier: 0.9, smoothWheel: true, syncTouch: false });
+    lenis = new window.Lenis({ lerp: 0.062, wheelMultiplier: 0.85, smoothWheel: true, syncTouch: false });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((t) => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
@@ -239,7 +276,7 @@ function setupScroll() {
   const inY = reduced ? 0 : 60;
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
-    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom 200%', scrub: reduced ? true : 0.6 },
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom 200%', scrub: reduced ? true : 1 },
   });
   tl.to(film, { f: last, duration: 0.86, ease: 'power1.inOut', onUpdate: () => draw(film.f) }, 0)
     .to('#heroProgress', { scaleY: 1, duration: 1 }, 0)
@@ -296,6 +333,34 @@ function setupScroll() {
     trigger: '#reel', start: 'top 80%', end: 'bottom 10%',
     onToggle: (self) => { reelVisible = self.isActive; if (self.isActive && lb.hidden && !reduced) reelVideo.play().catch(() => {}); else reelVideo.pause(); },
   });
+
+  // films: on desktop the reel is pinned and vertical scroll drives it sideways;
+  // phones (and reduced motion) get a native swipe row instead
+  const track = $('#filmsTrack');
+  ScrollTrigger.matchMedia({
+    '(min-width: 821px) and (prefers-reduced-motion: no-preference)': () => {
+      const dist = () => Math.max(0, track.scrollWidth - innerWidth);
+      const tw = gsap.to(track, {
+        x: () => -dist(), ease: 'none',
+        scrollTrigger: {
+          trigger: '#filmsPin', start: 'top top', end: () => '+=' + dist() * 0.62,   // sideways runs a little faster than the wheel
+          pin: true, scrub: 0.8, invalidateOnRefresh: true, anticipatePin: 1,
+          onUpdate: (self) => gsap.set('#filmsBar', { scaleX: self.progress }),
+        },
+      });
+      // each card turns gently toward you as it passes the centre: a depth cue
+      $$('.film-media', track).forEach((m) => {
+        gsap.timeline({ scrollTrigger: { trigger: m, containerAnimation: tw, start: 'left right', end: 'right left', scrub: true } })
+          .fromTo(m, { rotateY: -12, scale: 0.92 }, { rotateY: 0, scale: 1, ease: 'none', duration: 1 })
+          .to(m, { rotateY: 12, scale: 0.92, ease: 'none', duration: 1 });
+      });
+      return () => gsap.set(track, { x: 0 });
+    },
+  });
+  if (!reduced) {
+    gsap.from('.film', { y: 60, autoAlpha: 0, duration: 1.1, stagger: 0.08, ease: 'expo.out', scrollTrigger: { trigger: '#films', start: 'top 70%' } });
+    gsap.from('.films-note', { y: 20, autoAlpha: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.films-note', start: 'top 92%' } });
+  }
 
   if (!reduced) {
     // projects: the frame wipes open while the image settles

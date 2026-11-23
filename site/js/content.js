@@ -3,11 +3,9 @@ export const PROFILE = {
   name: 'Abdullah Al Abrar',
   nickname: 'Zohan',
   title: 'Architect & Visualizer',
-  studio: 'Aperture Visuals',
   email: 'johanabrar5@gmail.com',
   phone: '+880 18503 55772',
   behance: 'https://www.behance.net/johanabrar',
-  website: 'https://site-g13-83da.vercel.app/',
   location: 'Bashundhara R/A, Dhaka, Bangladesh',
   cv: 'assets/cv/Abdullah-Al-Abrar-CV.pdf',
   intro: 'I design buildings and then bring them to life: photoreal renders, walkthrough films and interiors that let clients feel a space before it exists.',
@@ -200,4 +198,21 @@ export const PROJECTS = [
     images: ['assets/work/p/environment-1.webp', 'assets/work/p/environment-2.webp'],
     link: 'https://www.behance.net/gallery/250515585/Bangladeshi-Environment-Scene-in-Blender',
   },
+];
+
+// Motion and VFX work, shown as a sideways reel under the walkthrough film.
+// Each has a full film (with sound, opens in the viewer), a short silent loop for
+// the card and a poster: assets/films/<id>.mp4, <id>-loop.mp4, <id>.webp.
+const F = 'assets/films/';
+const film = (id, title, kind, length, blurb) => ({ id, title, kind, length, blurb, video: `${F}${id}.mp4`, loop: `${F}${id}-loop.mp4`, cover: `${F}${id}.webp`, images: [] });
+export const FILMS = [
+  film('tragedy-2077', '2077 Tragedy', 'Short film', '1:08', 'A short film by A. Conception: a burning neon city at night, built and rendered in Blender.'),
+  film('dragon', 'Dragon', 'VFX', '0:32', 'A CG dragon tracked into live footage of a city street.'),
+  film('beggar', 'The Beggar', 'Environment breakdown', '0:39', 'From clay model to final render: a street corner scene, built up layer by layer.'),
+  film('storm', 'Storm at Sea', 'Ocean simulation', '0:28', 'A buoy riding a stormy ocean, with the simulation shown in its clay pass.'),
+  film('socio-camp', 'Socio Camp XII', 'VFX promo', '0:15', 'CG cars and a title reveal composited into a campus plate for Socio Camp XII.'),
+  film('drone', 'Forest Flight', 'Environment', '0:10', 'A drone-style flight low through a CG forest.'),
+  film('alpine', 'Alpine Cabin', 'Environment', '0:10', 'A cabin in a snowy mountain valley.'),
+  film('streetlight', 'Streetlight', 'FX shot', '0:04', 'A street lamp at dusk with drifting embers.'),
+  { id: 'penguins', title: 'Penguins', kind: 'Still', length: '', blurb: 'A still from his snow environment work.', cover: `${F}penguins-s.webp`, images: [`${F}penguins.webp`] },
 ];
